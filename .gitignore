@@ -12,6 +12,9 @@
 # Logs
 *.log
 
+# Evalscope artifacts
+.evalscope/
+
 # Python
 __pycache__/
 .pytest_cache/

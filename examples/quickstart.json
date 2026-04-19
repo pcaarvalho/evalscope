@@ -1,0 +1,24 @@
+{
+  "name": "quickstart-local",
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "prompt_template": "Answer clearly and briefly: {input}",
+  "cases": [
+    {
+      "id": "contains-hello",
+      "input": "Say hello to Pedro.",
+      "simulate_output": "Hello, Pedro.",
+      "checks": [
+        {"type": "contains", "value": "Hello"}
+      ]
+    },
+    {
+      "id": "regex-json",
+      "input": "Return JSON with status ok.",
+      "simulate_output": "{\"status\":\"ok\"}",
+      "checks": [
+        {"type": "regex", "value": "\"status\"\\s*:\\s*\"ok\""}
+      ]
+    }
+  ]
+}

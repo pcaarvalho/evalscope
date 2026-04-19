@@ -1,0 +1,23 @@
+name: support-triage
+provider: openai
+model: gpt-4.1-mini
+prompt_template: |
+  Classify this support request into one word:
+  - billing
+  - bug
+  - account
+
+  Request: {input}
+cases:
+  - id: billing-case
+    input: I was charged twice this month.
+    simulate_output: billing
+    checks:
+      - type: exact_match
+        value: billing
+  - id: bug-case
+    input: The export button crashes my browser.
+    simulate_output: bug
+    checks:
+      - type: contains
+        value: bug

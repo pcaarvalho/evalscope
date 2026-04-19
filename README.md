@@ -1,44 +1,125 @@
-# Venture Studio Template
+# Evalscope
 
-Template repository for new open source ventures created by the `Open Source Venture Studio`.
+`evalscope` is a local-first eval runner for LLM apps.
 
-This repo is intentionally small. It exists to give each new venture a clean
-starting point without dragging old project baggage into new work.
+The first wedge is narrow on purpose:
+- define small eval datasets in YAML or JSON
+- run them locally against an OpenAI model or simulated outputs
+- score each case with simple checks
+- compare the current run against a baseline artifact
 
-## What this template includes
+This is for engineers shipping prompts or agents who want a fast answer to:
 
-- `README.md` for product framing and setup
-- `LICENSE`
-- `CONTRIBUTING.md`
-- issue templates for venture briefs and build sprints
-- PR template for disciplined shipping
+> Did this change make my app better or worse?
 
-## Studio repo policy
+## Why this exists
 
-- One repo per venture or clearly bounded product context
-- Research can happen without a repo
-- Build-stage work should start in a dedicated repo
-- Do not reuse unrelated legacy repos for new ventures
+Most LLM eval tooling drifts toward platforms, dashboards, and heavy setup.
+`evalscope` starts one level lower:
 
-## How to use
+- files in repo
+- local runs
+- simple CLI
+- artifacts you can diff
 
-Create a new public repo from this template:
+That keeps the first release useful in less than 10 minutes.
+
+## Install
 
 ```bash
-gh repo create pcaarvalho/your-new-venture --public --template pcaarvalho/venture-studio-template
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
 ```
 
-Then clone it and replace the placeholders:
+## Quickstart
 
-- venture name
-- wedge
-- ICP
-- first release scope
-- owner
+Run the bundled quickstart example:
 
-## First-day checklist
+```bash
+evalscope run examples/quickstart.json
+```
 
-1. Rewrite the README for the specific venture.
-2. Record the wedge, user, and testable promise.
-3. Open the first build sprint issue.
-4. Ship the smallest public milestone in 7 days or less.
+This works without an API key because the example uses `simulate_output` to
+demonstrate the flow locally.
+
+For a real model call, set `OPENAI_API_KEY` and remove `simulate_output` from
+your cases.
+
+## Example spec
+
+```json
+{
+  "name": "support-triage",
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "prompt_template": "Classify this support ticket: {input}",
+  "cases": [
+    {
+      "id": "billing",
+      "input": "I was charged twice this month.",
+      "simulate_output": "billing",
+      "checks": [
+        {"type": "exact_match", "value": "billing"}
+      ]
+    }
+  ]
+}
+```
+
+## Commands
+
+Run an eval spec and write an artifact:
+
+```bash
+evalscope run examples/quickstart.json
+```
+
+Run with a baseline comparison:
+
+```bash
+evalscope run examples/quickstart.json --baseline .evalscope/runs/your-baseline.json
+```
+
+Diff two existing artifacts:
+
+```bash
+evalscope diff .evalscope/runs/current.json .evalscope/runs/baseline.json
+```
+
+Use CI-style exit behavior:
+
+```bash
+evalscope run examples/quickstart.json --ci
+```
+
+## Current v0 scope
+
+- OpenAI provider only
+- YAML and JSON specs
+- checks: `exact_match`, `contains`, `regex`
+- local JSON run artifacts
+- baseline vs current diff
+- example specs for local experimentation
+
+## Explicitly out of scope
+
+- dashboards
+- SaaS backend
+- multi-user collaboration
+- complex orchestration
+- multi-provider abstraction
+
+## Repo layout
+
+- [`evalscope/`](/Users/pedro/evalscope/evalscope) core package
+- [`examples/`](/Users/pedro/evalscope/examples) sample eval specs
+- [`tests/`](/Users/pedro/evalscope/tests) unit tests
+
+## Development
+
+Run the tests:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
