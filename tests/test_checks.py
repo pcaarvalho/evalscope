@@ -16,6 +16,11 @@ class CheckTests(unittest.TestCase):
         result = evaluate_check('{"status":"ok"}', "regex", '"status"\\s*:\\s*"ok"')
         self.assertTrue(result.passed)
 
+    def test_invalid_regex_fails_without_crashing(self) -> None:
+        result = evaluate_check("anything", "regex", "[")
+        self.assertFalse(result.passed)
+        self.assertIn("invalid regex", result.detail)
+
 
 if __name__ == "__main__":
     unittest.main()

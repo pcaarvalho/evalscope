@@ -93,6 +93,12 @@ Use CI-style exit behavior:
 evalscope run examples/quickstart.json --ci
 ```
 
+Check the installed CLI version:
+
+```bash
+evalscope --version
+```
+
 ## Current v0 scope
 
 - OpenAI provider only
@@ -112,9 +118,9 @@ evalscope run examples/quickstart.json --ci
 
 ## Repo layout
 
-- [`evalscope/`](/Users/pedro/evalscope/evalscope) core package
-- [`examples/`](/Users/pedro/evalscope/examples) sample eval specs
-- [`tests/`](/Users/pedro/evalscope/tests) unit tests
+- `evalscope/` core package
+- `examples/` sample eval specs
+- `tests/` unit tests
 
 ## Development
 
@@ -123,3 +129,6 @@ Run the tests:
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+The repo also includes a GitHub Actions workflow that installs the package,
+runs the unit tests, and smoke-tests the bundled quickstart example.

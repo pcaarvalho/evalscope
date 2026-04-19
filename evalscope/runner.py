@@ -16,20 +16,30 @@ def run_spec(spec: EvalSpec, baseline_path: Path | None = None, output_path: Pat
 
     for case in spec.cases:
         prompt = build_prompt(spec, case)
-        output = _run_case(spec, case, prompt)
-        check_results = _evaluate_case(output, case)
-        case_passed = all(result.passed for result in check_results)
+        case_error: str | None = None
 
-        cases.append(
-            {
-                "id": case.id,
-                "input": case.input,
-                "prompt": prompt,
-                "output": output,
-                "passed": case_passed,
-                "checks": [asdict(result) for result in check_results],
-            }
-        )
+        try:
+            output = _run_case(spec, case, prompt)
+            check_results = _evaluate_case(output, case)
+            case_passed = all(result.passed for result in check_results)
+        except Exception as exc:
+            output = ""
+            check_results = []
+            case_passed = False
+            case_error = str(exc)
+
+        case_payload = {
+            "id": case.id,
+            "input": case.input,
+            "prompt": prompt,
+            "output": output,
+            "passed": case_passed,
+            "checks": [asdict(result) for result in check_results],
+        }
+        if case_error:
+            case_payload["error"] = case_error
+
+        cases.append(case_payload)
 
     passed = sum(1 for case in cases if case["passed"])
     total = len(cases)

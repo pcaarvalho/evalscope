@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
+from evalscope import __version__
 from evalscope.diffing import build_run_diff
 from evalscope.runner import run_spec
 from evalscope.specs import load_spec
@@ -24,6 +26,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalscope", description="Local-first eval workflows for LLM apps.")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command")
 
     run_parser = subparsers.add_parser("run", help="Run an eval spec.")
@@ -41,13 +44,26 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _run_command(args: argparse.Namespace) -> int:
     spec_path = Path(args.spec)
-    spec = load_spec(spec_path)
-    output_path = Path(args.output) if args.output else default_output_path(spec.name)
     baseline_path = Path(args.baseline) if args.baseline else None
+    file_error = _ensure_existing_file(spec_path, "spec")
+    if file_error:
+        print(file_error, file=sys.stderr)
+        return 2
+    if baseline_path:
+        file_error = _ensure_existing_file(baseline_path, "baseline")
+        if file_error:
+            print(file_error, file=sys.stderr)
+            return 2
 
-    payload = run_spec(spec, baseline_path=baseline_path, output_path=output_path)
-    payload["output_path"] = str(output_path)
-    write_run(output_path, payload)
+    try:
+        spec = load_spec(spec_path)
+        output_path = Path(args.output) if args.output else default_output_path(spec.name)
+        payload = run_spec(spec, baseline_path=baseline_path, output_path=output_path)
+        payload["output_path"] = str(output_path)
+        write_run(output_path, payload)
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
 
     summary = payload["summary"]
     print(f"Run written to: {output_path}")
@@ -68,9 +84,23 @@ def _run_command(args: argparse.Namespace) -> int:
 
 
 def _diff_command(args: argparse.Namespace) -> int:
-    current = load_run(Path(args.current))
-    baseline = load_run(Path(args.baseline))
-    diff = build_run_diff(current, baseline)
+    current_path = Path(args.current)
+    baseline_path = Path(args.baseline)
+
+    for label, path in (("current", current_path), ("baseline", baseline_path)):
+        file_error = _ensure_existing_file(path, label)
+        if file_error:
+            print(file_error, file=sys.stderr)
+            return 2
+
+    try:
+        current = load_run(current_path)
+        baseline = load_run(baseline_path)
+        diff = build_run_diff(current, baseline)
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 2
+
     _print_diff(diff)
     return 0
 
@@ -89,3 +119,11 @@ def _print_diff(diff: dict[str, object]) -> None:
                 f"- {case['id']}: {case['change']} "
                 f"(baseline={case['baseline_passed']}, current={case['current_passed']})"
             )
+
+
+def _ensure_existing_file(path: Path, label: str) -> str | None:
+    if not path.exists():
+        return f"Error: {label} file not found: {path}"
+    if not path.is_file():
+        return f"Error: {label} path is not a file: {path}"
+    return None

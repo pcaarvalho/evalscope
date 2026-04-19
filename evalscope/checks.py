@@ -23,8 +23,12 @@ def evaluate_check(output: str, check_type: str, expected: str) -> CheckResult:
         passed = expected in text
         detail = "substring found" if passed else "substring missing"
     elif normalized_type == "regex":
-        passed = re.search(expected, text) is not None
-        detail = "pattern matched" if passed else "pattern did not match"
+        try:
+            passed = re.search(expected, text) is not None
+            detail = "pattern matched" if passed else "pattern did not match"
+        except re.error as exc:
+            passed = False
+            detail = f"invalid regex: {exc}"
     else:
         raise ValueError(f"Unsupported check type: {check_type}")
 
