@@ -4,21 +4,22 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from evalscope.checks import CheckResult, evaluate_check
-from evalscope.diffing import build_run_diff
-from evalscope.openai_adapter import run_openai_prompt
-from evalscope.specs import EvalCase, EvalSpec, build_prompt
-from evalscope.storage import load_run, utc_now_iso
+from .checks import CheckResult, evaluate_check
+from .diffing import build_run_diff
+from .openai_adapter import run_openai_prompt
+from .specs import EvalCase, EvalSpec, build_prompt
+from .storage import load_run, utc_now_iso
 
 
 def run_spec(spec: EvalSpec, baseline_path: Path | None = None, output_path: Path | None = None) -> dict[str, Any]:
     cases: list[dict[str, Any]] = []
 
     for case in spec.cases:
-        prompt = build_prompt(spec, case)
+        prompt = ""
         case_error: str | None = None
 
         try:
+            prompt = build_prompt(spec, case)
             output = _run_case(spec, case, prompt)
             check_results = _evaluate_case(output, case)
             case_passed = all(result.passed for result in check_results)

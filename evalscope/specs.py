@@ -55,6 +55,7 @@ def parse_spec(payload: dict[str, Any]) -> EvalSpec:
         raise ValueError("Spec must define at least one case")
 
     cases: list[EvalCase] = []
+    seen_case_ids: set[str] = set()
     for raw_case in raw_cases:
         if not isinstance(raw_case, dict):
             raise ValueError("Each case must be an object")
@@ -63,6 +64,9 @@ def parse_spec(payload: dict[str, Any]) -> EvalSpec:
         case_input = str(raw_case.get("input") or "")
         if not case_id:
             raise ValueError("Each case must define an id")
+        if case_id in seen_case_ids:
+            raise ValueError(f"Duplicate case id: {case_id}")
+        seen_case_ids.add(case_id)
 
         raw_checks = raw_case.get("checks")
         if not isinstance(raw_checks, list) or not raw_checks:

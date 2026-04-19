@@ -1,3 +1,5 @@
+# Safe local example: each case uses simulate_output, so no API key is needed.
+# Remove simulate_output from a case after setting OPENAI_API_KEY to run it live.
 name: support-triage
 provider: openai
 model: gpt-4.1-mini

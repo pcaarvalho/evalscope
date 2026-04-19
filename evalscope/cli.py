@@ -4,11 +4,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from evalscope import __version__
-from evalscope.diffing import build_run_diff
-from evalscope.runner import run_spec
-from evalscope.specs import load_spec
-from evalscope.storage import default_output_path, load_run, write_run
+from . import __version__
+from .diffing import build_run_diff
+from .runner import run_spec
+from .specs import load_spec
+from .storage import default_output_path, load_run, write_run
 
 
 def main(argv: list[str] | None = None) -> int:

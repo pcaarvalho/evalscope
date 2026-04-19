@@ -85,6 +85,64 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(payload["cases"][1]["error"], "upstream timeout")
         self.assertFalse(payload["cases"][1]["passed"])
 
+    def test_run_spec_isolates_prompt_render_error(self) -> None:
+        spec = parse_spec(
+            {
+                "name": "prompt-error-isolation",
+                "provider": "openai",
+                "model": "gpt-4.1-mini",
+                "prompt_template": "{input}",
+                "cases": [
+                    {
+                        "id": "local-pass",
+                        "input": "billing",
+                        "simulate_output": "billing",
+                        "checks": [{"type": "exact_match", "value": "billing"}],
+                    },
+                    {
+                        "id": "bad-prompt",
+                        "input": "shipping",
+                        "prompt": "{missing}",
+                        "simulate_output": "shipping",
+                        "checks": [{"type": "exact_match", "value": "shipping"}],
+                    },
+                ],
+            }
+        )
+
+        payload = run_spec(spec)
+
+        self.assertEqual(payload["summary"]["total"], 2)
+        self.assertEqual(payload["summary"]["passed"], 1)
+        self.assertEqual(payload["summary"]["failed"], 1)
+        self.assertEqual(payload["cases"][1]["prompt"], "")
+        self.assertIn("missing", payload["cases"][1]["error"])
+        self.assertFalse(payload["cases"][1]["passed"])
+
+    def test_parse_spec_rejects_duplicate_case_ids(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Duplicate case id: dup"):
+            parse_spec(
+                {
+                    "name": "dup-ids",
+                    "provider": "openai",
+                    "model": "gpt-4.1-mini",
+                    "cases": [
+                        {
+                            "id": "dup",
+                            "input": "a",
+                            "simulate_output": "a",
+                            "checks": [{"type": "exact_match", "value": "a"}],
+                        },
+                        {
+                            "id": "dup",
+                            "input": "b",
+                            "simulate_output": "b",
+                            "checks": [{"type": "exact_match", "value": "b"}],
+                        },
+                    ],
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

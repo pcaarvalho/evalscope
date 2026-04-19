@@ -26,7 +26,12 @@ That keeps the first release useful in less than 10 minutes.
 
 ## Install
 
+Requires Python 3.10+. Clone the repo and run everything below from the repo
+root:
+
 ```bash
+git clone https://github.com/pcaarvalho/evalscope
+cd evalscope
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
@@ -40,11 +45,24 @@ Run the bundled quickstart example:
 evalscope run examples/quickstart.json
 ```
 
+Expected output looks like:
+
+```text
+Run written to: .evalscope/runs/<timestamp>-quickstart-local.json
+Summary: 2/2 passed (0 failed, pass_rate=1.0)
+```
+
 This works without an API key because the example uses `simulate_output` to
 demonstrate the flow locally.
 
-For a real model call, set `OPENAI_API_KEY` and remove `simulate_output` from
-your cases.
+Prefer YAML? The bundled YAML example exercises the same local flow:
+
+```bash
+evalscope run examples/support_triage.yaml
+```
+
+For a real model call, copy one of the bundled specs, set `OPENAI_API_KEY`,
+and remove `simulate_output` from the cases you want to execute live.
 
 ## Example spec
 
@@ -75,16 +93,23 @@ Run an eval spec and write an artifact:
 evalscope run examples/quickstart.json
 ```
 
-Run with a baseline comparison:
+The `.evalscope/runs/` directory is created automatically. If you want a stable
+baseline path for repeat comparisons, write one explicitly:
 
 ```bash
-evalscope run examples/quickstart.json --baseline .evalscope/runs/your-baseline.json
+evalscope run examples/quickstart.json --output .evalscope/runs/quickstart-baseline.json
+```
+
+Then compare a fresh run against that saved baseline:
+
+```bash
+evalscope run examples/quickstart.json --output .evalscope/runs/quickstart-current.json --baseline .evalscope/runs/quickstart-baseline.json
 ```
 
 Diff two existing artifacts:
 
 ```bash
-evalscope diff .evalscope/runs/current.json .evalscope/runs/baseline.json
+evalscope diff .evalscope/runs/quickstart-current.json .evalscope/runs/quickstart-baseline.json
 ```
 
 Use CI-style exit behavior:
